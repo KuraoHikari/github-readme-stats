@@ -1,4 +1,4 @@
-import { renderStatsCard } from "../src/cards/stats-card.js";
+import { fetchStats } from "../src/fetchers/stats-fetcher.js";
 import { blacklist } from "../src/common/blacklist.js";
 import {
   clampValue,
@@ -7,62 +7,30 @@ import {
   parseBoolean,
   renderError,
 } from "../src/common/utils.js";
-import { fetchStats } from "../src/fetchers/stats-fetcher.js";
 import { isLocaleAvailable } from "../src/translations.js";
 
 export default async (req, res) => {
   const {
     username,
     hide,
-    hide_title,
-    hide_border,
-    card_width,
-    hide_rank,
-    show_icons,
     include_all_commits,
-    line_height,
-    title_color,
-    ring_color,
-    icon_color,
-    text_color,
-    text_bold,
-    bg_color,
-    theme,
-    cache_seconds,
     exclude_repo,
-    custom_title,
-    locale,
-    disable_animations,
-    border_radius,
-    number_format,
-    border_color,
-    rank_icon,
+    cache_seconds,
     show,
   } = req.query;
-  res.setHeader("Content-Type", "image/svg+xml");
+
+  res.setHeader("Content-Type", "application/json");
 
   if (blacklist.includes(username)) {
-    return res.send(
-      renderError("Something went wrong", "This username is blacklisted", {
-        title_color,
-        text_color,
-        bg_color,
-        border_color,
-        theme,
-      }),
-    );
+    return res.status(400).json({
+      error: "This username is blacklisted",
+    });
   }
 
   if (locale && !isLocaleAvailable(locale)) {
-    return res.send(
-      renderError("Something went wrong", "Language not found", {
-        title_color,
-        text_color,
-        bg_color,
-        border_color,
-        theme,
-      }),
-    );
+    return res.status(400).json({
+      error: "Language not found",
+    });
   }
 
   try {
@@ -93,8 +61,7 @@ export default async (req, res) => {
       }, s-maxage=${cacheSeconds}, stale-while-revalidate=${CONSTANTS.ONE_DAY}`,
     );
 
-    return res.json({...stats, cache_seconds: cacheSeconds});
-
+    return res.status(200).json(stats);
   } catch (err) {
     res.setHeader(
       "Cache-Control",
@@ -102,14 +69,9 @@ export default async (req, res) => {
         CONSTANTS.ERROR_CACHE_SECONDS
       }, stale-while-revalidate=${CONSTANTS.ONE_DAY}`,
     ); // Use lower cache period for errors.
-    return res.send(
-      renderError(err.message, err.secondaryMessage, {
-        title_color,
-        text_color,
-        bg_color,
-        border_color,
-        theme,
-      }),
-    );
+    return res.status(500).json({
+      error: err.message,
+      secondaryMessage: err.secondaryMessage,
+    });
   }
 };
