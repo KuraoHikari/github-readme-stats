@@ -17,6 +17,7 @@ export default async (req, res) => {
     exclude_repo,
     cache_seconds,
     show,
+    locale
   } = req.query;
 
   res.setHeader("Content-Type", "application/json");
