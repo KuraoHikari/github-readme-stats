@@ -6,8 +6,10 @@ import jsonStat from "./api/json-stat.js";
 import wakatimeCard from "./api/wakatime.js";
 import gistCard from "./api/gist.js";
 import express from "express";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 app.listen(process.env.port || 9000);
 
 app.get("/", statsCard);
@@ -15,4 +17,4 @@ app.get("/pin", repoCard);
 app.get("/top-langs", langCard);
 app.get("/wakatime", wakatimeCard);
 app.get("/gist", gistCard);
-app.get("/json-stat",jsonStat)
+app.get("/json-stat", jsonStat);
